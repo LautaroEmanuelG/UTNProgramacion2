@@ -1,12 +1,11 @@
 package fabrica.utnfrm.fabrica.entities;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import lombok.Data;
 
+@Data
 public class MateriaPrima {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    private Integer stock;
+    private String nombre;
+    private Integer existencia;
 }
