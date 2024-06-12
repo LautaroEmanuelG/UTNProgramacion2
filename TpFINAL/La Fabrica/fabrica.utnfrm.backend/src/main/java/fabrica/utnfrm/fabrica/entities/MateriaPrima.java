@@ -8,4 +8,9 @@ public class MateriaPrima {
     @Id
     private String nombre;
     private Integer existencia;
+
+    public MateriaPrima(String nombre, Integer existencia) {
+        this.nombre = nombre;
+        this.existencia = existencia;
+    }
 }

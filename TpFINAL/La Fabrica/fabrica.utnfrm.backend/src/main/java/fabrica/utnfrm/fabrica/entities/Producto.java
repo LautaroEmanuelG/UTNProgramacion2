@@ -35,4 +35,12 @@ public class Producto {
     
         return productosUtilizandoMateriaPrima;
     }
+
+    public Producto() {
+    }
+    public Producto(String nombre, Integer stock, HashMap<MateriaPrima,Integer> mat_primas) {
+        this.nombre = nombre;
+        this.stock = stock;
+        this.mat_primas = mat_primas;
+    }
 }

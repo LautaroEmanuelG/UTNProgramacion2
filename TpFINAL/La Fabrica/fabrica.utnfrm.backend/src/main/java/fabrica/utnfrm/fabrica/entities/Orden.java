@@ -12,4 +12,11 @@ public class Orden {
     private Integer cantidad;
 
     private Producto producto;
+
+    public Orden(Producto producto, Integer cantidad) {
+        this.producto = producto;
+        this.producto_a_fabricar = producto.getNombre();
+        this.cantidad = cantidad;
+        this.cumplida = false;
+    }
 }
