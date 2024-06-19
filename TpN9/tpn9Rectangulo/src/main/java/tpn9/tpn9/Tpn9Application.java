@@ -29,11 +29,13 @@ public class Tpn9Application {
 			r.setAncho(Integer.parseInt(anchura));
 			String altura = JOptionPane.showInputDialog("Ingrese el alto:");
 			r.setAlto(Integer.parseInt(altura));
-			System.out.println("ancho: " + r.getAncho() + " alto: " + r.getAlto() + "\nel área es: " + r.calcularArea());
+			System.out
+					.println("ancho: " + r.getAncho() + " alto: " + r.getAlto() + "\nel área es: " + r.calcularArea());
 			r.guardaRect();
 		} else {
 			r = r.consultaRect();
-			System.out.println("ancho: " + r.getAncho() + " alto: " + r.getAlto() + "\nel área es: " + r.calcularArea());
+			System.out
+					.println("ancho: " + r.getAncho() + " alto: " + r.getAlto() + "\nel área es: " + r.calcularArea());
 		}
 	}
 }
