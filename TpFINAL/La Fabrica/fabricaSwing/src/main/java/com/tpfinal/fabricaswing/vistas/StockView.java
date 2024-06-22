@@ -35,7 +35,7 @@ public class StockView extends javax.swing.JPanel {
         modelExistencias = new DefaultListModel<>();
         initComponents();
 
-        cargarDatosDesdeArchivo();
+        cargarDatosDesdeArchivo(new File(datosStock));
         actualizarListas();
     }
 
@@ -151,9 +151,7 @@ public class StockView extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void cargarDatosDesdeArchivo() {   
-        File file = new File(datosStock);
-
+    private void cargarDatosDesdeArchivo(File file) {
         // Si el archivo no existe, se crea
         if (!file.exists()) {
             try {

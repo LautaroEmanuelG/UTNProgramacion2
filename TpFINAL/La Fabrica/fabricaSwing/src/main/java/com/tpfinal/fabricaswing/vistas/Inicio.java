@@ -13,13 +13,13 @@ public class Inicio extends javax.swing.JFrame {
     public Inicio() {
         initComponents();
         this.setTitle("La Fábrica");
-        this.setSize(335,600);
+        this.setSize(335,650);
         
         showPanel(new GenerarOrdenView());
     }
     
     private void showPanel(JPanel panel) {
-        panel.setSize(310, 550); // Ajusta el tamaño según sea necesario
+        panel.setSize(310, 800); // Ajusta el tamaño según sea necesario
         panel.setLocation(0, 0);
 
         content.removeAll();
@@ -85,7 +85,7 @@ public class Inicio extends javax.swing.JFrame {
         );
         contentLayout.setVerticalGroup(
             contentLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 454, Short.MAX_VALUE)
+            .addGap(0, 723, Short.MAX_VALUE)
         );
 
         btn1.setText("Ordenar");
@@ -134,7 +134,7 @@ public class Inicio extends javax.swing.JFrame {
                     .addComponent(btn1, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btn3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(content, javax.swing.GroupLayout.PREFERRED_SIZE, 454, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(content, javax.swing.GroupLayout.PREFERRED_SIZE, 723, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -148,7 +148,7 @@ public class Inicio extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, 564, 564, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addGap(0, 263, Short.MAX_VALUE))
         );
 
         pack();
