@@ -4,17 +4,114 @@
  */
 package com.tpfinal.fabricaswing.vistas;
 
+import com.tpfinal.fabricaswing.entidades.MateriaPrima;
+import com.tpfinal.fabricaswing.entidades.OrdenProduccion;
+import com.tpfinal.fabricaswing.entidades.Producto;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.DefaultListModel;
+
 /**
  *
  * @author Lautaro
  */
 public class GenerarOrdenView extends javax.swing.JPanel {
 
+    private List<Producto> productos;
+    private List<MateriaPrima> inventarioMateriasPrimas;
+
     /**
      * Creates new form GenerarOrdenView
      */
     public GenerarOrdenView() {
         initComponents();
+        productos = new ArrayList<>();
+        inventarioMateriasPrimas = new ArrayList<>();
+        cargarProductos();
+        cargarInventarioMateriasPrimas();
+        actualizarListaProductos();
+        actualizarListaOrdenes();
+    }
+
+    private void cargarProductos() {
+        try (BufferedReader br = new BufferedReader(new FileReader("productos.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                Producto producto = parseProducto(line);
+                productos.add(producto);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Producto parseProducto(String line) {
+        // Ejemplo: "nombre_producto,MP:materia1,10,MP:materia2,20,PR:producto1,..."
+        String[] parts = line.split(",");
+        String nombreProducto = parts[0];
+        List<Object> materiasPrimas = new ArrayList<>();
+        for (int i = 1; i < parts.length; i++) {
+            if (parts[i].startsWith("MP:")) {
+                String nombreMateria = parts[i].substring(3);
+                int existencia = Integer.parseInt(parts[++i]);
+                materiasPrimas.add(new MateriaPrima(nombreMateria, existencia));
+            } else if (parts[i].startsWith("PR:")) {
+                String nombreSubProducto = parts[i].substring(3);
+                materiasPrimas.add(new Producto(nombreSubProducto, new ArrayList<>()));
+            }
+        }
+        return new Producto(nombreProducto, materiasPrimas);
+    }
+
+    private void cargarInventarioMateriasPrimas() {
+        // Método para cargar el inventario de materias primas desde un archivo
+        try (BufferedReader br = new BufferedReader(new FileReader("inventario.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                String nombreMateria = parts[0];
+                int existencia = Integer.parseInt(parts[1]);
+                inventarioMateriasPrimas.add(new MateriaPrima(nombreMateria, existencia));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void actualizarListaOrdenes() {
+        DefaultListModel<String> modelOrdenes = new DefaultListModel<>();
+        DefaultListModel<String> modelCumplidas = new DefaultListModel<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader("ordenes.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                String nombreProducto = parts[0];
+                String cantidad = parts[1];
+                String cumplida = parts[2];
+
+                modelOrdenes.addElement(nombreProducto + " - " + cantidad);
+                modelCumplidas.addElement(cumplida.equals("true") ? "Cumplida" : "No Cumplida");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        jList2.setModel(modelOrdenes);
+        jList3.setModel(modelCumplidas);
+    }
+
+    private void actualizarListaProductos() {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        for (Producto producto : productos) {
+            model.addElement(producto.getNombre());
+        }
+        jList1.setModel(model);
     }
 
     /**
@@ -27,10 +124,17 @@ public class GenerarOrdenView extends javax.swing.JPanel {
     private void initComponents() {
 
         jLabel2 = new javax.swing.JLabel();
-        producto1 = new javax.swing.JCheckBox();
         jTextField2 = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jList1 = new javax.swing.JList<>();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jList2 = new javax.swing.JList<>();
+        jLabel1 = new javax.swing.JLabel();
+        jButton2 = new javax.swing.JButton();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jList3 = new javax.swing.JList<>();
 
         setMaximumSize(new java.awt.Dimension(300, 500));
         setPreferredSize(new java.awt.Dimension(300, 500));
@@ -38,13 +142,6 @@ public class GenerarOrdenView extends javax.swing.JPanel {
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel2.setText("Listado de Productos");
-
-        producto1.setText("jCheckBox1");
-        producto1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                producto1ActionPerformed(evt);
-            }
-        });
 
         jTextField2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -56,57 +153,214 @@ public class GenerarOrdenView extends javax.swing.JPanel {
 
         jButton1.setText("Generar Orden");
         jButton1.setPreferredSize(new java.awt.Dimension(150, 30));
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jList1.setModel(new javax.swing.AbstractListModel<String>() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public String getElementAt(int i) { return strings[i]; }
+        });
+        jScrollPane1.setViewportView(jList1);
+
+        jList2.setModel(new javax.swing.AbstractListModel<String>() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public String getElementAt(int i) { return strings[i]; }
+        });
+        jScrollPane2.setViewportView(jList2);
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jLabel1.setText("Historial de ordenes");
+
+        jButton2.setText("Procesar");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        jList3.setModel(new javax.swing.AbstractListModel<String>() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public String getElementAt(int i) { return strings[i]; }
+        });
+        jScrollPane3.setViewportView(jList3);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGap(17, 17, 17)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(19, 19, 19)
+                        .addGap(60, 60, 60)
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextField2))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel4)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(producto1)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(66, 66, 66)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(84, Short.MAX_VALUE))
+                                .addGap(0, 17, Short.MAX_VALUE)
+                                .addComponent(jButton2))
+                            .addComponent(jScrollPane3))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(16, 16, 16)
                 .addComponent(jLabel2)
-                .addGap(18, 18, 18)
-                .addComponent(producto1)
-                .addGap(90, 90, 90)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4))
-                .addGap(18, 18, 18)
+                    .addComponent(jLabel4)
+                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(261, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(jButton2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(71, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
-
-    private void producto1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_producto1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_producto1ActionPerformed
 
     private void jTextField2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField2ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextField2ActionPerformed
 
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        List<OrdenProduccion> ordenes = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader("ordenes.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                String nombreProducto = parts[0];
+                int cantidad = Integer.parseInt(parts[1]);
+                boolean cumplida = Boolean.parseBoolean(parts[2]);
+                Producto producto = productos.stream()
+                        .filter(p -> p.getNombre().equals(nombreProducto))
+                        .findFirst()
+                        .orElse(null);
+                OrdenProduccion orden = new OrdenProduccion(nombreProducto, cumplida, cantidad, producto);
+                ordenes.add(orden);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (OrdenProduccion orden : ordenes) {
+            if (verificarMateriasPrimas(orden)) {
+                orden.setCumplida(true);
+            } else {
+                orden.setCumplida(false);
+            }
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("ordenes.txt"))) {
+            for (OrdenProduccion orden : ordenes) {
+                bw.write(orden.getProducto_a_fabricar() + "," + orden.getCantidad() + "," + orden.getCumplida());
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        actualizarListaOrdenes();
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private boolean verificarMateriasPrimas(OrdenProduccion orden) {
+        Producto producto = orden.getProducto();
+        for (Object materia : producto.getMateriasPrimas()) {
+            if (materia instanceof MateriaPrima) {
+                int cantidadNecesaria = orden.getCantidad();
+                int cantidadDisponible = obtenerCantidadDisponible(((MateriaPrima) materia).getNombre());
+                if (cantidadDisponible < cantidadNecesaria) {
+                    return false;
+                }
+            } else if (materia instanceof Producto) {
+                Producto subProducto = (Producto) materia;
+                OrdenProduccion subOrden = new OrdenProduccion(subProducto.getNombre(), false, orden.getCantidad(), subProducto);
+                if (!verificarMateriasPrimas(subOrden)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        String selectedProduct = jList1.getSelectedValue();
+        String cantidadStr = jTextField2.getText();
+
+        if (selectedProduct == null || cantidadStr.isEmpty()) {
+            // Mostrar un mensaje de error
+            return;
+        }
+
+        int cantidad = Integer.parseInt(cantidadStr);
+        Producto producto = productos.stream()
+                .filter(p -> p.getNombre().equals(selectedProduct))
+                .findFirst()
+                .orElse(null);
+
+        if (producto == null) {
+            // Mostrar un mensaje de error
+            return;
+        }
+
+        OrdenProduccion orden = new OrdenProduccion(selectedProduct, false, cantidad, producto);
+        guardarOrden(orden);
+        actualizarListaOrdenes();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void guardarOrden(OrdenProduccion orden) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("ordenes.txt", true))) {
+            bw.write(orden.getProducto_a_fabricar() + "," + orden.getCantidad() + "," + orden.getCumplida());
+            bw.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int obtenerCantidadDisponible(String nombreMateria) {
+        for (MateriaPrima mp : inventarioMateriasPrimas) {
+            if (mp.getNombre().equals(nombreMateria)) {
+                return mp.getExistencia();
+            }
+        }
+        return 0; // Ejemplo, devuelve la cantidad disponible real
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JList<String> jList1;
+    private javax.swing.JList<String> jList2;
+    private javax.swing.JList<String> jList3;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTextField jTextField2;
-    private javax.swing.JCheckBox producto1;
     // End of variables declaration//GEN-END:variables
 }

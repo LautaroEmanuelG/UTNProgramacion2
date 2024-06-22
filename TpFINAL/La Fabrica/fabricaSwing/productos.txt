@@ -1,5 +1,6 @@
-Anillo,Plata
-Cadena de Bronce,Lingote de Bronce,Bronce
-Nuevo Producto,Copa
-Copa,Lingote de Bronce
 Nuevo Producto1,Cadena de Bronce,Oro
+Coso de bronce,Bronce
+Nuevo Producto,
+Cadena de Bronce,Lingote de Bronce,Bronce
+Anillo,Plata
+Copa,Lingote de Bronce
