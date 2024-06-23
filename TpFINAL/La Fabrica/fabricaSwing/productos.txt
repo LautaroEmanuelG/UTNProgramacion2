@@ -1,0 +1,8 @@
+Oro y lingote de plata,Oro
+Lingote de Oro,Oro
+Plata y Lingote de Plata,Plata,Lingote de Plata
+PlatORO,Plata,Oro
+Lingotes OROPLATABRONCEC,Lingote de Bronce,Lingote de Plata
+Lingote de Bronce,Bronce
+AMALGAMA,Oro,Bronce,Plata,Oro y lingote de plata,Lingote de Oro
+Lingote de Plata,Plata

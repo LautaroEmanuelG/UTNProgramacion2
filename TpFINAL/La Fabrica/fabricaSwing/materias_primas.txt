@@ -1,0 +1,3 @@
+Bronce,1
+Plata,1
+Oro,1
