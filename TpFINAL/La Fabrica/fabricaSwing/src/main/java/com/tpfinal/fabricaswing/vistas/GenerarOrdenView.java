@@ -89,10 +89,6 @@ public class GenerarOrdenView extends javax.swing.JPanel {
                 materiasPrimas.add(new MateriaPrima(part, 1)); // Inicializar con existencia 1
             }
         }
-
-        // Imprimir para verificar las materias primas cargadas correctamente
-        System.out.println("Nuevo producto: " + nombreProducto + " - " + materiasPrimas);
-
         return new Producto(nombreProducto, materiasPrimas);
     }
 
@@ -282,39 +278,74 @@ public class GenerarOrdenView extends javax.swing.JPanel {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         //Procesar ordenes pendientes
+        procesarOrdenesPendientes();
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void procesarOrdenesPendientes() {
         try {
+            System.out.println("Procesando");
             List<String> lines = Files.readAllLines(Paths.get("ordenes.txt"));
             List<String> newLines = new ArrayList<>();
             int ordenesActualizadas = 0;
 
-            // Procesar cada línea de orden
             for (String line : lines) {
-                String[] parts = line.split(",");
+                line = line.trim(); // Eliminar espacios en blanco al inicio y al final
+                String[] parts = line.split("\\s*,\\s*");
                 if (parts.length == 3) {
-                    String nombreProducto = parts[0];
-                    int cantidad = Integer.parseInt(parts[1]);
-                    boolean cumplida = Boolean.parseBoolean(parts[2]);
+                    String nombreProducto = parts[0].trim();
+                    int cantidad = Integer.parseInt(parts[1].trim());
+                    boolean cumplida = Boolean.parseBoolean(parts[2].trim());
 
                     if (!cumplida) {
-                        // Verificar si ahora se pueden generar las órdenes con las existencias actuales
-                        List<MateriaPrima> materiasNecesarias = new ArrayList<>();
-                        Producto producto = mapaProductos.get(nombreProducto);
-                        if (producto != null && obtenerMateriasPrimasNecesarias(producto, cantidad, materiasNecesarias)) {
-                            // Descontar las materias primas del inventario
-                            if (descontarMateriasPrimas(materiasNecesarias, cantidad)) {
-                                // Marcar la orden como cumplida y agregar al final de la lista
-                                newLines.add(nombreProducto + "," + cantidad + ",true");
-                                ordenesActualizadas++;
+                        Producto producto = null;
+                        // Buscar el producto en la lista de productos
+                        for (Producto p : productos) {
+                            if (p.getNombre().equals(nombreProducto)) {
+                                producto = p;
+                                break;
+                            }
+                        }
+
+                        if (producto != null) {
+                            List<MateriaPrima> materiasNecesarias = new ArrayList<>();
+                            System.out.println("Procesando orden para: " + producto.getNombre());
+
+                            // Verificar si se pueden obtener las materias primas necesarias
+                            if (obtenerMateriasPrimasNecesarias(producto, cantidad, materiasNecesarias)) {
+                                // Descontar las materias primas del inventario
+                                if (descontarMateriasPrimas(materiasNecesarias, cantidad)) {
+                                    System.out.println("Orden cumplida para: " + producto.getNombre());
+
+                                    // Crear una nueva orden cumplida
+                                    OrdenProduccion orden = new OrdenProduccion(
+                                            nombreProducto,
+                                            true,
+                                            cantidad,
+                                            producto
+                                    );
+                                    guardarOrdenProduccion(orden);
+                                    ordenesActualizadas++;
+                                    newLines.add(nombreProducto + "," + cantidad + ",true");
+                                } else {
+                                    System.out.println("Inventario insuficiente para: " + producto.getNombre());
+
+                                    // No se pudieron descontar las materias primas, la orden sigue pendiente
+                                    newLines.add(nombreProducto + "," + cantidad + ",false");
+                                }
                             } else {
-                                // No hay suficiente inventario, mantener la orden pendiente al principio de la lista
-                                newLines.add(0, line);
+                                System.out.println("Materias primas insuficientes para: " + producto.getNombre());
+
+                                // No se pudieron obtener las materias primas necesarias, la orden sigue pendiente
+                                newLines.add(nombreProducto + "," + cantidad + ",false");
                             }
                         } else {
-                            // Producto no encontrado o no se pueden satisfacer los requerimientos
-                            newLines.add(0, line);
+                            System.out.println("Producto no encontrado: " + nombreProducto);
+
+                            // No se encontró el producto, la orden sigue pendiente
+                            newLines.add(line); // Mantener la orden original
                         }
                     } else {
-                        // Orden ya cumplida, colocarla al final de la lista
+                        // La orden ya estaba cumplida, la mantenemos igual
                         newLines.add(line);
                     }
                 } else {
@@ -334,7 +365,7 @@ public class GenerarOrdenView extends javax.swing.JPanel {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         int selectedIndex = jList1.getSelectedIndex();
@@ -390,23 +421,35 @@ public class GenerarOrdenView extends javax.swing.JPanel {
 
     private boolean verificarMateriasPrimasRecursivo(Producto producto, int cantidad, Map<String, Integer> requerimientos) {
         for (Object item : producto.getMateriasPrimas()) {
-            System.out.println(item);
             if (item instanceof MateriaPrima) {
                 MateriaPrima mp = (MateriaPrima) item;
-                requerimientos.put(mp.getNombre(), requerimientos.getOrDefault(mp.getNombre(), 0) + mp.getExistencia() * cantidad);
-                System.out.println(requerimientos);
+                int cantidadRequerida = mp.getExistencia() * cantidad;
+                int existenciaActual = obtenerExistenciaMateriaPrima(mp.getNombre());
+
+                if (existenciaActual < cantidadRequerida) {
+                    return false; // No hay suficiente existencia para cumplir la orden
+                }
+
+                requerimientos.put(mp.getNombre(), requerimientos.getOrDefault(mp.getNombre(), 0) + cantidadRequerida);
             } else if (item instanceof Producto) {
                 Producto subProducto = mapaProductos.get(((Producto) item).getNombre());
                 if (subProducto != null) {
                     if (!verificarMateriasPrimasRecursivo(subProducto, cantidad, requerimientos)) {
-                        System.out.println("FALSO");
                         return false;
                     }
                 }
             }
         }
-        System.out.println("TRUE" + producto.getMateriasPrimas());
-        return true;
+        return true; // Se pueden satisfacer todos los requerimientos de materias primas
+    }
+
+    private int obtenerExistenciaMateriaPrima(String nombre) {
+        for (MateriaPrima mp : inventarioMateriasPrimas) {
+            if (mp.getNombre().equals(nombre)) {
+                return mp.getExistencia();
+            }
+        }
+        return 0; // Materia prima no encontrada (esto debería manejarse según el diseño de tu aplicación)
     }
 
     private boolean obtenerMateriasPrimasNecesarias(Producto producto, int cantidad, List<MateriaPrima> materiasNecesarias) {

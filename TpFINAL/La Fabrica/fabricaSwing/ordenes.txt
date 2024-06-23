@@ -1,4 +1,5 @@
-Coso de bronce,1,false
-Coso de bronce,1,false
-
 Coso de bronce,1,true
+Coso de bronce,1,true
+Coso de bronce,1,true
+Coso de bronce,1,true
+Coso de bronce,2,false
