@@ -1,5 +1,5 @@
-Algun coso,Cadena de Bronce,Oro
+Algun coso,Oro
 Coso de bronce,Bronce
-Cadena de Bronce,Lingote de Bronce,Bronce
+Cadena de Bronce,Bronce,Plata
 Anillo,Plata
 Copa,Lingote de Bronce

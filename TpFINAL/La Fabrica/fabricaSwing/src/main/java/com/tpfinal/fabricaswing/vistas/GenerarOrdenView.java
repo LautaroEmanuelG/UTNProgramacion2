@@ -281,7 +281,59 @@ public class GenerarOrdenView extends javax.swing.JPanel {
     }//GEN-LAST:event_jTextField2ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        //Procesar ordenes pendientes
+        try {
+            List<String> lines = Files.readAllLines(Paths.get("ordenes.txt"));
+            List<String> newLines = new ArrayList<>();
+            int ordenesActualizadas = 0;
 
+            // Procesar cada línea de orden
+            for (String line : lines) {
+                String[] parts = line.split(",");
+                if (parts.length == 3) {
+                    String nombreProducto = parts[0];
+                    int cantidad = Integer.parseInt(parts[1]);
+                    boolean cumplida = Boolean.parseBoolean(parts[2]);
+
+                    if (!cumplida) {
+                        // Verificar si ahora se pueden generar las órdenes con las existencias actuales
+                        List<MateriaPrima> materiasNecesarias = new ArrayList<>();
+                        Producto producto = mapaProductos.get(nombreProducto);
+                        if (producto != null && obtenerMateriasPrimasNecesarias(producto, cantidad, materiasNecesarias)) {
+                            // Descontar las materias primas del inventario
+                            if (descontarMateriasPrimas(materiasNecesarias, cantidad)) {
+                                // Marcar la orden como cumplida y agregar al final de la lista
+                                newLines.add(nombreProducto + "," + cantidad + ",true");
+                                ordenesActualizadas++;
+                            } else {
+                                // No hay suficiente inventario, mantener la orden pendiente al principio de la lista
+                                newLines.add(0, line);
+                            }
+                        } else {
+                            // Producto no encontrado o no se pueden satisfacer los requerimientos
+                            newLines.add(0, line);
+                        }
+                    } else {
+                        // Orden ya cumplida, colocarla al final de la lista
+                        newLines.add(line);
+                    }
+                } else {
+                    // Línea no válida, mantenerla tal cual en el archivo
+                    newLines.add(line);
+                }
+            }
+
+            // Escribir las nuevas líneas actualizadas al archivo
+            Files.write(Paths.get("ordenes.txt"), newLines);
+
+            // Mostrar un mensaje con la cantidad de órdenes actualizadas
+            JOptionPane.showMessageDialog(null, "Se actualizaron " + ordenesActualizadas + " órdenes pendientes.");
+
+            // Actualizar la lista de órdenes después de procesar las órdenes pendientes
+            actualizarListaOrdenes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -291,32 +343,47 @@ public class GenerarOrdenView extends javax.swing.JPanel {
             // Imprimir para verificar que las materias primas están correctamente cargadas
             System.out.println(productoSeleccionado.getNombre() + " - " + productoSeleccionado.getMateriasPrimas());
 
-            int cantidad = Integer.parseInt(jTextField2.getText());
+            try {
+                int cantidad = Integer.parseInt(jTextField2.getText());
 
-            List<MateriaPrima> materiasNecesarias = new ArrayList<>();
-            if (obtenerMateriasPrimasNecesarias(productoSeleccionado, cantidad, materiasNecesarias)) {
-                OrdenProduccion orden = new OrdenProduccion(
-                        productoSeleccionado.getNombre(),
-                        true,
-                        cantidad,
-                        productoSeleccionado
-                );
-                if (descontarMateriasPrimas(materiasNecesarias, cantidad)) {
-                    guardarOrdenProduccion(orden);
+                List<MateriaPrima> materiasNecesarias = new ArrayList<>();
+                if (obtenerMateriasPrimasNecesarias(productoSeleccionado, cantidad, materiasNecesarias)) {
+                    OrdenProduccion orden;
+                    if (descontarMateriasPrimas(materiasNecesarias, cantidad)) {
+                        orden = new OrdenProduccion(
+                                productoSeleccionado.getNombre(),
+                                true,
+                                cantidad,
+                                productoSeleccionado
+                        );
+                        guardarOrdenProduccion(orden);
+                        JOptionPane.showMessageDialog(this, "Orden generada y cumplida exitosamente.");
+                    } else {
+                        orden = new OrdenProduccion(
+                                productoSeleccionado.getNombre(),
+                                false,
+                                cantidad,
+                                productoSeleccionado
+                        );
+                        guardarOrdenProduccion(orden);
+                        JOptionPane.showMessageDialog(this, "No hay suficiente inventario para generar la orden.");
+                    }
+                    // Actualizar la lista de órdenes después de guardar la orden
                     actualizarListaOrdenes();
-                    JOptionPane.showMessageDialog(this, "Orden generada y cumplida exitosamente.");
                 } else {
+                    OrdenProduccion orden = new OrdenProduccion(
+                            productoSeleccionado.getNombre(),
+                            false,
+                            cantidad,
+                            productoSeleccionado
+                    );
+                    guardarOrdenProduccion(orden);
                     JOptionPane.showMessageDialog(this, "No hay suficiente inventario para generar la orden.");
+                    // Actualizar la lista de órdenes después de guardar la orden
+                    actualizarListaOrdenes();
                 }
-            } else {
-                OrdenProduccion orden = new OrdenProduccion(
-                        productoSeleccionado.getNombre(),
-                        false,
-                        cantidad,
-                        productoSeleccionado
-                );
-                guardarOrdenProduccion(orden);
-                JOptionPane.showMessageDialog(this, "No hay suficiente inventario para generar la orden.");
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Ingrese una cantidad válida.");
             }
         }
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -363,6 +430,8 @@ public class GenerarOrdenView extends javax.swing.JPanel {
             List<String> lines = Files.readAllLines(Paths.get("materias_primas.txt"));
             List<String> newLines = new ArrayList<>();
 
+            boolean todasMateriasDescontadas = true;
+
             for (String line : lines) {
                 String[] parts = line.split(",");
                 if (parts.length == 2) {
@@ -376,7 +445,8 @@ public class GenerarOrdenView extends javax.swing.JPanel {
                             encontrada = true;
                             // Verificar si hay suficiente existencia
                             if (existencia < mp.getExistencia() * cantidad) {
-                                return false; // No hay suficiente existencia
+                                todasMateriasDescontadas = false; // No hay suficiente existencia
+                                break;
                             }
                             // Actualizar existencia restando la cantidad necesaria
                             existencia -= mp.getExistencia() * cantidad;
@@ -391,7 +461,12 @@ public class GenerarOrdenView extends javax.swing.JPanel {
                 }
             }
 
-            // Escribir las líneas actualizadas de vuelta al archivo si todo está correcto
+            // Si no se pudieron descontar todas las materias primas necesarias, retornar false
+            if (!todasMateriasDescontadas) {
+                return false;
+            }
+
+            // Escribir las líneas actualizadas de vuelta al archivo
             Files.write(Paths.get("materias_primas.txt"), newLines);
             return true; // Todas las materias primas necesarias fueron descontadas correctamente
         } catch (IOException e) {
