@@ -1,6 +1,3 @@
-Anillo,1,true
-Cadena de Bronce,1,true
-Copa,1,true
-Nuevo Producto,1,true
-Nuevo Producto1,1,true
+Coso de bronce,1,true
+Coso de bronce,1,true
 Coso de bronce,1,true

@@ -32,6 +32,11 @@ public class MateriaPrima {
     public void setExistencia(Integer existencia) {
         this.existencia = existencia;
     }
-    
-    
+    @Override
+    public String toString() {
+        return "MateriaPrima{" +
+                "nombre='" + nombre + '\'' +
+                ", existencia=" + existencia +
+                '}';
+    }
 }

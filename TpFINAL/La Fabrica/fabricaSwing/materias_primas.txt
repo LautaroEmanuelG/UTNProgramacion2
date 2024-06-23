@@ -1,4 +1,4 @@
-Bronce,4
+Bronce,0
 Plata,2
 Oro,2
 Lingote de Bronce,5

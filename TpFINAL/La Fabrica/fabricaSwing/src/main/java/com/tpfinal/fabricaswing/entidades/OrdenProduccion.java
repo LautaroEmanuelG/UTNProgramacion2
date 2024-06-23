@@ -21,8 +21,6 @@ public class OrdenProduccion {
         this.producto = producto;
     }
     
-    
-
     public String getProducto_a_fabricar() {
         return Producto_a_fabricar;
     }
@@ -54,7 +52,4 @@ public class OrdenProduccion {
     public void setProducto(Producto producto) {
         this.producto = producto;
     }
-    
-    
-    
 }
