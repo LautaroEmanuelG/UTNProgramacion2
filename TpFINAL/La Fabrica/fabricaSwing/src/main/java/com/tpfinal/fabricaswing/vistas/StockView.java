@@ -38,6 +38,7 @@ public class StockView extends javax.swing.JPanel {
      * Creates new form StockView
      */
     public StockView() {
+        this.setSize(300,700);
         materiasPrimas = new ArrayList<>();
         productos = new ArrayList<>();
         modelNombres = new DefaultListModel<>();
@@ -85,7 +86,7 @@ public class StockView extends javax.swing.JPanel {
         jScrollPane3 = new javax.swing.JScrollPane();
         ranking = new javax.swing.JList<>();
 
-        setPreferredSize(new java.awt.Dimension(300, 500));
+        setPreferredSize(new java.awt.Dimension(300, 700));
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel1.setText("Listado Materias Primas");
@@ -230,9 +231,6 @@ public class StockView extends javax.swing.JPanel {
             }
             
             if (subProducto != null) {
-                System.out.println("ES UN PRODUCTO " + subProducto.getNombre());
-                System.out.println("Su composición es " + subProducto.getMateriasPrimas());
-                System.out.println("Se le adicionará esta cantidad a " + contarMateriaPrimaEnProducto(subProducto, materiaPrimaSeleccionada) + " " + materiaPrimaSeleccionada);
                 // Recursivamente contar las materias primas en el producto compuesto
                 count += contarMateriaPrimaEnProducto(subProducto, materiaPrimaSeleccionada);
             }
