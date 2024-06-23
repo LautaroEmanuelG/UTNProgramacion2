@@ -5,6 +5,7 @@
 package com.tpfinal.fabricaswing.vistas;
 
 import com.tpfinal.fabricaswing.entidades.MateriaPrima;
+import com.tpfinal.fabricaswing.entidades.Producto;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,7 +13,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 
@@ -21,22 +24,30 @@ import javax.swing.JOptionPane;
  * @author Lautaro
  */
 public class StockView extends javax.swing.JPanel {
+
     private List<MateriaPrima> materiasPrimas;
+    private List<Producto> productos;
     private DefaultListModel<String> modelNombres;
     private DefaultListModel<String> modelExistencias;
+    private DefaultListModel<String> modelRanking;
     private final String datosStock = "materias_primas.txt";
+    private final String datosProductos = "productos.txt";
 
     /**
      * Creates new form StockView
      */
     public StockView() {
         materiasPrimas = new ArrayList<>();
+        productos = new ArrayList<>();
         modelNombres = new DefaultListModel<>();
         modelExistencias = new DefaultListModel<>();
+        modelRanking = new DefaultListModel<>();
         initComponents();
 
         cargarDatosDesdeArchivo(new File(datosStock));
+        cargarProductosDesdeArchivo(new File(datosProductos));
         actualizarListas();
+        contarUsoMateriasPrimas();
     }
 
     /**
@@ -61,7 +72,7 @@ public class StockView extends javax.swing.JPanel {
         jButton1 = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
-        jList3 = new javax.swing.JList<>();
+        ranking = new javax.swing.JList<>();
 
         setPreferredSize(new java.awt.Dimension(300, 500));
 
@@ -100,12 +111,12 @@ public class StockView extends javax.swing.JPanel {
         jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel5.setText("Materia Prima mas Utilizada");
 
-        jList3.setModel(new javax.swing.AbstractListModel<String>() {
+        ranking.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
-        jScrollPane3.setViewportView(jList3);
+        jScrollPane3.setViewportView(ranking);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -171,7 +182,6 @@ public class StockView extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void cargarDatosDesdeArchivo(File file) {
-        // Si el archivo no existe, se crea
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -179,7 +189,7 @@ public class StockView extends javax.swing.JPanel {
                 JOptionPane.showMessageDialog(this, "Error al crear el archivo: " + e.getMessage());
             }
         }
-        
+
         try (BufferedReader br = new BufferedReader(new FileReader(datosStock))) {
             String linea;
             while ((linea = br.readLine()) != null) {
@@ -195,7 +205,7 @@ public class StockView extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Error al cargar datos desde el archivo: " + e.getMessage());
         }
     }
-    
+
     private void guardarDatosEnArchivo() {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(datosStock))) {
             for (MateriaPrima materia : materiasPrimas) {
@@ -206,13 +216,63 @@ public class StockView extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Error al guardar datos en el archivo: " + e.getMessage());
         }
     }
-    
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-        agregarMateriaPrima();
-    }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void agregarMateriaPrima() {
+    private void cargarProductosDesdeArchivo(File file) {
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error al crear el archivo: " + e.getMessage());
+            }
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(datosProductos))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] partes = linea.split(",");
+                if (partes.length >= 2) {
+                    String nombre = partes[0].trim();
+                    List<Object> materiasPrimasProducto = new ArrayList<>();
+                    for (int i = 1; i < partes.length; i++) {
+                        String materia = partes[i].trim();
+                        MateriaPrima materiaPrima = buscarMateriaPrimaPorNombre(materia);
+                        if (materiaPrima != null) {
+                            materiasPrimasProducto.add(materiaPrima);
+                        } else {
+                            Producto producto = buscarProductoPorNombre(materia);
+                            if (producto != null) {
+                                materiasPrimasProducto.add(producto);
+                            }
+                        }
+                    }
+                    Producto producto = new Producto(nombre, materiasPrimasProducto);
+                    productos.add(producto);
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar productos desde el archivo: " + e.getMessage());
+        }
+    }
+
+    private Producto buscarProductoPorNombre(String nombre) {
+        for (Producto producto : productos) {
+            if (producto.getNombre().equalsIgnoreCase(nombre)) {
+                return producto;
+            }
+        }
+        return null;
+    }
+
+    private MateriaPrima buscarMateriaPrimaPorNombre(String nombre) {
+        for (MateriaPrima materiaPrima : materiasPrimas) {
+            if (materiaPrima.getNombre().equalsIgnoreCase(nombre)) {
+                return materiaPrima;
+            }
+        }
+        return null;
+    }
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         String nombre = jTextField1.getText().trim();
         String existenciaStr = jTextField2.getText().trim();
 
@@ -242,9 +302,9 @@ public class StockView extends javax.swing.JPanel {
         materiasPrimas.add(nuevaMateria);
         actualizarListas();
         guardarDatosEnArchivo();
-    }
+    }//GEN-LAST:event_jButton1ActionPerformed
 
-private void actualizarListas() {
+    private void actualizarListas() {
         modelNombres.clear();
         modelExistencias.clear();
 
@@ -256,6 +316,33 @@ private void actualizarListas() {
         jList1.setModel(modelNombres);
         jList2.setModel(modelExistencias);
     }
+
+    private void contarUsoMateriasPrimas() {
+        Map<String, Integer> contadorMateriasPrimas = new HashMap<>();
+
+        for (Producto producto : productos) {
+            contarMateriasPrimasProducto(producto, contadorMateriasPrimas);
+        }
+
+        modelRanking.clear();
+        contadorMateriasPrimas.entrySet().stream()
+                .sorted((entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()))
+                .forEach(entry -> modelRanking.addElement(entry.getKey() + ": " + entry.getValue()));
+
+        ranking.setModel(modelRanking);
+    }
+    
+    private void contarMateriasPrimasProducto(Producto producto, Map<String, Integer> contador) {
+        for (Object materia : producto.getMateriasPrimas()) {
+            if (materia instanceof Producto) {
+                contarMateriasPrimasProducto((Producto) materia, contador);
+            } else if (materia instanceof MateriaPrima) {
+                String nombreMateria = ((MateriaPrima) materia).getNombre();
+                contador.put(nombreMateria, contador.getOrDefault(nombreMateria, 0) + 1);
+            }
+        }
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
@@ -265,11 +352,11 @@ private void actualizarListas() {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JList<String> jList1;
     private javax.swing.JList<String> jList2;
-    private javax.swing.JList<String> jList3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
+    private javax.swing.JList<String> ranking;
     // End of variables declaration//GEN-END:variables
 }

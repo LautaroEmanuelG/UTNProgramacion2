@@ -8,3 +8,4 @@ Coso de bronce,2,true
 Coso de bronce,5,true
 Coso de bronce,1,true
 Coso de bronce,2,true
+Bronce y Plata,2,true
