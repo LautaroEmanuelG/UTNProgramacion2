@@ -38,7 +38,7 @@ public class StockView extends javax.swing.JPanel {
      * Creates new form StockView
      */
     public StockView() {
-        this.setSize(300,700);
+        this.setSize(300, 700);
         materiasPrimas = new ArrayList<>();
         productos = new ArrayList<>();
         modelNombres = new DefaultListModel<>();
@@ -194,51 +194,49 @@ public class StockView extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void actualizarRanking(String materiaPrimaSeleccionada) {
-    Map<String, Integer> usoMateriasPrimas = new HashMap<>();
+        Map<String, Integer> usoMateriasPrimas = new HashMap<>();
 
-    for (Producto producto : productos) {
-        int cantidad = contarMateriaPrimaEnProducto(producto, materiaPrimaSeleccionada);
-        if (cantidad > 0) {
-            usoMateriasPrimas.put(producto.getNombre(), cantidad);
+        for (Producto producto : productos) {
+            int cantidad = contarMateriaPrimaEnProducto(producto, materiaPrimaSeleccionada);
+            if (cantidad > 0) {
+                usoMateriasPrimas.put(producto.getNombre(), cantidad);
+            }
         }
+
+        modelRanking.clear();
+        usoMateriasPrimas.entrySet().stream()
+                .sorted((entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()))
+                .forEach(entry -> modelRanking.addElement(entry.getKey() + " - " + entry.getValue()));
+
+        ranking.setModel(modelRanking);
     }
-
-    modelRanking.clear();
-    usoMateriasPrimas.entrySet().stream()
-            .sorted((entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()))
-            .forEach(entry -> modelRanking.addElement(entry.getKey() + " - " + entry.getValue()));
-
-    ranking.setModel(modelRanking);
-}
-
 
     private int contarMateriaPrimaEnProducto(Producto producto, String materiaPrimaSeleccionada) {
-    int count = 0;
+        int count = 0;
 
-    for (Object materia : producto.getMateriasPrimas()) {
-        if (materia instanceof MateriaPrima) {
-            if (((MateriaPrima) materia).getNombre().equalsIgnoreCase(materiaPrimaSeleccionada)) {
-                count++;
-            }
-        } else if (materia instanceof Producto) {
-            // Buscar el producto correspondiente en la lista de productos
-            Producto subProducto = null;
-            for (Producto p : productos) {
-                if (p.getNombre().equalsIgnoreCase(((Producto) materia).getNombre())) {
-                    subProducto = p;
-                    break;
+        for (Object materia : producto.getMateriasPrimas()) {
+            if (materia instanceof MateriaPrima) {
+                if (((MateriaPrima) materia).getNombre().equalsIgnoreCase(materiaPrimaSeleccionada)) {
+                    count++;
+                }
+            } else if (materia instanceof Producto) {
+                // Buscar el producto correspondiente en la lista de productos
+                Producto subProducto = null;
+                for (Producto p : productos) {
+                    if (p.getNombre().equalsIgnoreCase(((Producto) materia).getNombre())) {
+                        subProducto = p;
+                        break;
+                    }
+                }
+
+                if (subProducto != null) {
+                    // Recursivamente contar las materias primas en el producto compuesto
+                    count += contarMateriaPrimaEnProducto(subProducto, materiaPrimaSeleccionada);
                 }
             }
-            
-            if (subProducto != null) {
-                // Recursivamente contar las materias primas en el producto compuesto
-                count += contarMateriaPrimaEnProducto(subProducto, materiaPrimaSeleccionada);
-            }
         }
+        return count;
     }
-    return count;
-}
-
 
     private void cargarDatosDesdeArchivo(File file) {
         if (!file.exists()) {
