@@ -1,2 +1,2 @@
-Plata y Lingote de Plata,2,false
-Plata y Lingote de Plata,2,false
+Plata y Lingote de Plata,2,true
+Plata y Lingote de Plata,2,true
