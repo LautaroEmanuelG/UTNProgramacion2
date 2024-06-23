@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
+import javax.swing.event.ListSelectionEvent;
 
 /**
  *
@@ -48,6 +49,16 @@ public class StockView extends javax.swing.JPanel {
         cargarProductosDesdeArchivo(new File(datosProductos));
         actualizarListas();
         contarUsoMateriasPrimas();
+
+        // Añadir ListSelectionListener a jList1
+        jList1.addListSelectionListener((ListSelectionEvent e) -> {
+            if (!e.getValueIsAdjusting()) {
+                String materiaPrimaSeleccionada = jList1.getSelectedValue();
+                if (materiaPrimaSeleccionada != null) {
+                    actualizarRanking(materiaPrimaSeleccionada);
+                }
+            }
+        });
     }
 
     /**
@@ -181,6 +192,56 @@ public class StockView extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void actualizarRanking(String materiaPrimaSeleccionada) {
+    Map<String, Integer> usoMateriasPrimas = new HashMap<>();
+
+    for (Producto producto : productos) {
+        int cantidad = contarMateriaPrimaEnProducto(producto, materiaPrimaSeleccionada);
+        if (cantidad > 0) {
+            usoMateriasPrimas.put(producto.getNombre(), cantidad);
+        }
+    }
+
+    modelRanking.clear();
+    usoMateriasPrimas.entrySet().stream()
+            .sorted((entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()))
+            .forEach(entry -> modelRanking.addElement(entry.getKey() + " - " + entry.getValue()));
+
+    ranking.setModel(modelRanking);
+}
+
+
+    private int contarMateriaPrimaEnProducto(Producto producto, String materiaPrimaSeleccionada) {
+    int count = 0;
+
+    for (Object materia : producto.getMateriasPrimas()) {
+        if (materia instanceof MateriaPrima) {
+            if (((MateriaPrima) materia).getNombre().equalsIgnoreCase(materiaPrimaSeleccionada)) {
+                count++;
+            }
+        } else if (materia instanceof Producto) {
+            // Buscar el producto correspondiente en la lista de productos
+            Producto subProducto = null;
+            for (Producto p : productos) {
+                if (p.getNombre().equalsIgnoreCase(((Producto) materia).getNombre())) {
+                    subProducto = p;
+                    break;
+                }
+            }
+            
+            if (subProducto != null) {
+                System.out.println("ES UN PRODUCTO " + subProducto.getNombre());
+                System.out.println("Su composición es " + subProducto.getMateriasPrimas());
+                System.out.println("Se le adicionará esta cantidad a " + contarMateriaPrimaEnProducto(subProducto, materiaPrimaSeleccionada) + " " + materiaPrimaSeleccionada);
+                // Recursivamente contar las materias primas en el producto compuesto
+                count += contarMateriaPrimaEnProducto(subProducto, materiaPrimaSeleccionada);
+            }
+        }
+    }
+    return count;
+}
+
+
     private void cargarDatosDesdeArchivo(File file) {
         if (!file.exists()) {
             try {
@@ -206,17 +267,6 @@ public class StockView extends javax.swing.JPanel {
         }
     }
 
-    private void guardarDatosEnArchivo() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(datosStock))) {
-            for (MateriaPrima materia : materiasPrimas) {
-                bw.write(materia.getNombre() + "," + materia.getExistencia());
-                bw.newLine();
-            }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error al guardar datos en el archivo: " + e.getMessage());
-        }
-    }
-
     private void cargarProductosDesdeArchivo(File file) {
         if (!file.exists()) {
             try {
@@ -235,13 +285,19 @@ public class StockView extends javax.swing.JPanel {
                     List<Object> materiasPrimasProducto = new ArrayList<>();
                     for (int i = 1; i < partes.length; i++) {
                         String materia = partes[i].trim();
-                        MateriaPrima materiaPrima = buscarMateriaPrimaPorNombre(materia);
-                        if (materiaPrima != null) {
-                            materiasPrimasProducto.add(materiaPrima);
+                        Producto productoExistente = buscarProductoPorNombre(materia);
+                        if (productoExistente != null) {
+                            materiasPrimasProducto.add(productoExistente);
                         } else {
-                            Producto producto = buscarProductoPorNombre(materia);
-                            if (producto != null) {
-                                materiasPrimasProducto.add(producto);
+                            MateriaPrima materiaPrimaExistente = buscarMateriaPrimaPorNombre(materia);
+                            if (materiaPrimaExistente != null) {
+                                materiasPrimasProducto.add(materiaPrimaExistente);
+                            } else {
+                                // Si no es una materia prima existente, puede ser un producto nuevo
+                                // Creamos un producto temporal y lo agregamos a la lista
+                                Producto nuevoProducto = new Producto(materia, new ArrayList<>());
+                                System.out.println("Cargando producto" + materia);
+                                materiasPrimasProducto.add(nuevoProducto);
                             }
                         }
                     }
@@ -251,6 +307,17 @@ public class StockView extends javax.swing.JPanel {
             }
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error al cargar productos desde el archivo: " + e.getMessage());
+        }
+    }
+
+    private void guardarDatosEnArchivo() {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(datosStock))) {
+            for (MateriaPrima materia : materiasPrimas) {
+                bw.write(materia.getNombre() + "," + materia.getExistencia());
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar datos en el archivo: " + e.getMessage());
         }
     }
 
@@ -331,7 +398,7 @@ public class StockView extends javax.swing.JPanel {
 
         ranking.setModel(modelRanking);
     }
-    
+
     private void contarMateriasPrimasProducto(Producto producto, Map<String, Integer> contador) {
         for (Object materia : producto.getMateriasPrimas()) {
             if (materia instanceof Producto) {
@@ -342,7 +409,7 @@ public class StockView extends javax.swing.JPanel {
             }
         }
     }
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;

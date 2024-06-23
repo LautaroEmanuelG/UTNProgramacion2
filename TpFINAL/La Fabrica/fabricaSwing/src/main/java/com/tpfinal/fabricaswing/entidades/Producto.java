@@ -12,7 +12,7 @@ import java.util.List;
  * @author Lautaro
  */
 public class Producto {
-    public String nombre;
+    private String nombre;
     private List<Object> materiasPrimas; // Lista que puede contener MateriaPrima o Producto
 
     // Constructor
