@@ -112,6 +112,10 @@ public class GenerarOrdenView extends javax.swing.JPanel {
         DefaultListModel<String> modelOrdenes = new DefaultListModel<>();
         DefaultListModel<String> modelCumplidas = new DefaultListModel<>();
 
+        // Listas temporales para almacenar las órdenes no cumplidas y cumplidas
+        List<String> ordenesNoCumplidas = new ArrayList<>();
+        List<String> ordenesCumplidas = new ArrayList<>();
+
         try (BufferedReader br = new BufferedReader(new FileReader("ordenes.txt"))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -121,12 +125,28 @@ public class GenerarOrdenView extends javax.swing.JPanel {
                     String cantidad = parts[1];
                     String cumplida = parts[2];
 
-                    modelOrdenes.addElement(nombreProducto + " - " + cantidad);
-                    modelCumplidas.addElement(cumplida.equals("true") ? "Cumplida" : "No Cumplida");
+                    String orden = nombreProducto + " - " + cantidad;
+                    if (cumplida.equals("true")) {
+                        ordenesCumplidas.add(orden);
+                    } else {
+                        ordenesNoCumplidas.add(orden);
+                    }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        // Agregar primero las órdenes no cumplidas
+        for (String orden : ordenesNoCumplidas) {
+            modelOrdenes.addElement(orden);
+            modelCumplidas.addElement("No Cumplida");
+        }
+
+        // Agregar las órdenes cumplidas
+        for (String orden : ordenesCumplidas) {
+            modelOrdenes.addElement(orden);
+            modelCumplidas.addElement("Cumplida");
         }
 
         jList2.setModel(modelOrdenes);
@@ -451,15 +471,6 @@ public class GenerarOrdenView extends javax.swing.JPanel {
         return true; // Se pueden satisfacer todos los requerimientos de materias primas
     }
 
-    private int obtenerExistenciaMateriaPrima(String nombre) {
-        for (MateriaPrima mp : inventarioMateriasPrimas) {
-            if (mp.getNombre().equals(nombre)) {
-                return mp.getExistencia();
-            }
-        }
-        return 0; // Materia prima no encontrada (esto debería manejarse según el diseño de tu aplicación)
-    }
-
     private boolean obtenerMateriasPrimasNecesarias(Producto producto, int cantidad, List<MateriaPrima> materiasNecesarias) {
         Map<String, Integer> requerimientos = new HashMap<>();
         if (verificarMateriasPrimasRecursivo(producto, cantidad, requerimientos)) {
@@ -495,12 +506,12 @@ public class GenerarOrdenView extends javax.swing.JPanel {
                         if (mp.getNombre().equals(nombreMateria)) {
                             encontrada = true;
                             // Verificar si hay suficiente existencia
-                            if (existencia < mp.getExistencia() * cantidad) {
+                            if (existencia < mp.getExistencia()) {
                                 todasMateriasDescontadas = false; // No hay suficiente existencia
                                 break;
                             }
                             // Actualizar existencia restando la cantidad necesaria
-                            existencia -= mp.getExistencia() * cantidad;
+                            existencia -= mp.getExistencia();
                             break;
                         }
                     }
@@ -526,6 +537,15 @@ public class GenerarOrdenView extends javax.swing.JPanel {
         }
     }
 
+    private int obtenerExistenciaMateriaPrima(String nombre) {
+        for (MateriaPrima mp : inventarioMateriasPrimas) {
+            if (mp.getNombre().equals(nombre)) {
+                return mp.getExistencia();
+            }
+        }
+        return 0; // Materia prima no encontrada (esto debería manejarse según el diseño de tu aplicación)
+    }
+
     private MateriaPrima buscarMateriaPrimaEnInventario(String nombre) {
         for (MateriaPrima mp : inventarioMateriasPrimas) {
             if (mp.getNombre().equals(nombre)) {
@@ -544,16 +564,6 @@ public class GenerarOrdenView extends javax.swing.JPanel {
         }
     }
 
-    private void guardarInventarioActualizado() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("materias_primas.txt"))) {
-            for (MateriaPrima mp : inventarioMateriasPrimas) {
-                bw.write(mp.getNombre() + "," + mp.getExistencia());
-                bw.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;

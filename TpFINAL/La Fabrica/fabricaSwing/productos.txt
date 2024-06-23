@@ -1,6 +1,5 @@
-Cadena de Bronce,Bronce,Plata
-Bronce y Plata,Bronce,Plata
-Coso de bronce,Bronce
-Anillo,Plata
-Copa,Lingote de Bronce
-Algun coso,Oro
+Lingote de Bronce,Bronce
+PlatORO,Plata,Oro
+Lingote de Oro,Oro
+Oro y lingote de plata,Oro,Lingote de Plata
+Lingote de Plata,Plata

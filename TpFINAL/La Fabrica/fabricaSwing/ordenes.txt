@@ -1,11 +1,11 @@
-Coso de bronce,1,true
-Coso de bronce,1,true
-Coso de bronce,1,true
-Coso de bronce,1,true
-Coso de bronce,2,true
-Coso de bronce,1,true
-Coso de bronce,2,true
-Coso de bronce,5,true
-Coso de bronce,1,true
-Coso de bronce,2,true
-Bronce y Plata,2,true
+Lingote de Bronce,2,true
+Lingote de Plata,2,true
+Lingote de Oro,2,true
+Lingote de Oro,1,true
+Oro y lingote de plata,1,false
+Lingote de Bronce,2,true
+PlatORO,1,true
+PlatORO,2,true
+Oro y lingote de plata,1,false
+PlatORO,3,true
+Lingote de Bronce,3,true
