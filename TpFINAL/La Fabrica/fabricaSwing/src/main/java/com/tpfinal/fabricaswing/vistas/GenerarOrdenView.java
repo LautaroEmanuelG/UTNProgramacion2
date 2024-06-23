@@ -310,9 +310,17 @@ public class GenerarOrdenView extends javax.swing.JPanel {
                             List<MateriaPrima> materiasNecesarias = new ArrayList<>();
                             System.out.println("Procesando orden para: " + producto.getNombre());
 
-                            // Verificar si se pueden obtener las materias primas necesarias
-                            if (obtenerMateriasPrimasNecesarias(producto, cantidad, materiasNecesarias)) {
-                                // Descontar las materias primas del inventario
+                            // Verificar si se pueden obtener las materias primas necesarias para la cantidad total
+                            boolean puedeCumplirOrden = true;
+                            for (int i = 0; i < cantidad; i++) {
+                                if (!obtenerMateriasPrimasNecesarias(producto, 1, materiasNecesarias)) {
+                                    puedeCumplirOrden = false;
+                                    break;
+                                }
+                            }
+
+                            if (puedeCumplirOrden) {
+                                // Descontar las materias primas del inventario para la cantidad total
                                 if (descontarMateriasPrimas(materiasNecesarias, cantidad)) {
                                     System.out.println("Orden cumplida para: " + producto.getNombre());
 
