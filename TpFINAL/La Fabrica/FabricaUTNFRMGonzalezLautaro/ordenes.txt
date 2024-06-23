@@ -1,0 +1,3 @@
+Lingote de Bronce,2,true
+Esposas,3,true
+Cadena de Bronce,1,true
